@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Result — {{ problem.title }} — CodeCrunch{% endblock %}
+
+{% block extra_head %}
+<style>
+  .back { font-size: 0.85rem; margin-bottom: 18px; display: block; }
+
+  .verdict-box {
+    padding: 16px 20px;
+    border: 1px solid #ddd;
+    margin-bottom: 20px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .verdict-label { font-size: 0.8rem; color: #888; margin-bottom: 4px; }
+  .verdict-text { font-size: 1.4rem; font-weight: bold; }
+  .accepted  { color: #2d7a3a; }
+  .wrong     { color: #b91c1c; }
+  .tle       { color: #a07000; }
+  .runtime   { color: #b91c1c; }
+
+  .score {
+    font-size: 0.9rem;
+    color: #555;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border: 1px solid #ddd;
+    margin-bottom: 20px;
+  }
+  th {
+    background: #f0f0f0;
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    color: #555;
+    border-bottom: 1px solid #ddd;
+  }
+  td {
+    padding: 11px 14px;
+    border-bottom: 1px solid #eee;
+    font-family: monospace;
+    font-size: 0.88rem;
+  }
+  tr:last-child td { border-bottom: none; }
+
+  .status {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 3px;
+    font-size: 0.78rem;
+    font-weight: bold;
+    font-family: Arial, sans-serif;
+  }
+  .s-passed  { background: #e6f4ea; color: #2d7a3a; }
+  .s-failed  { background: #fce8e8; color: #b91c1c; }
+  .s-tle     { background: #fff8e1; color: #a07000; }
+  .s-runtime { background: #fce8e8; color: #b91c1c; }
+
+  .actions { display: flex; gap: 12px; }
+  .btn {
+    padding: 8px 20px;
+    font-size: 0.88rem;
+    text-decoration: none;
+    border: 1px solid #ccc;
+    color: #222;
+    background: #fff;
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+    display: inline-block;
+  }
+  .btn-primary { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .btn:hover { opacity: 0.85; }
+</style>
+{% endblock %}
+
+{% block content %}
+<a class="back" href="/">← All Problems</a>
+
+{% set passed = results | selectattr('status', 'equalto', 'Passed') | list | length %}
+{% set total = results | length %}
+
+{% if verdict == "Accepted" %}
+  {% set v_class = "accepted" %}
+{% elif verdict == "Time Limit Exceeded" %}
+  {% set v_class = "tle" %}
+{% elif verdict == "Runtime Error" %}
+  {% set v_class = "runtime" %}
+{% else %}
+  {% set v_class = "wrong" %}
+{% endif %}
+
+<div class="verdict-box">
+  <div>
+    <div class="verdict-label">{{ problem.title }}</div>
+    <div class="verdict-text {{ v_class }}">{{ verdict }}</div>
+  </div>
+  <div class="score">{{ passed }} / {{ total }} test cases passed</div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Test Case</th>
+      <th>Input</th>
+      <th>Expected</th>
+      <th>Your Output</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in results %}
+    {% if r.status == 'Passed' %}
+      {% set sc = 's-passed' %}
+    {% elif r.status == 'TLE' %}
+      {% set sc = 's-tle' %}
+    {% elif r.status == 'Runtime Error' %}
+      {% set sc = 's-runtime' %}
+    {% else %}
+      {% set sc = 's-failed' %}
+    {% endif %}
+    <tr>
+      <td>{{ loop.index }}</td>
+      <td>{{ r.input }}</td>
+      <td>{{ r.expected }}</td>
+      <td>{{ r.got if r.got else '(empty)' }}</td>
+      <td><span class="status {{ sc }}">{{ r.status }}</span></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="actions">
+  <a href="/problem/{{ request.view_args.pid }}" class="btn btn-primary">Try Again</a>
+  <a href="/" class="btn">All Problems</a>
+</div>
+{% endblock %}

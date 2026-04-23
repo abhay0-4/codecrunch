@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}CodeCrunch{% endblock %}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 15px;
+      color: #222;
+      background: #f5f5f5;
+    }
+
+    nav {
+      background: #1a1a1a;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-brand {
+      color: #fff;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+    .nav-links { display: flex; align-items: center; gap: 20px; }
+    .nav-links a {
+      color: #ccc;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .nav-links a:hover { color: #fff; }
+    .nav-user { color: #fff; font-weight: bold; font-size: 0.9rem; }
+    .nav-divider { color: #555; }
+    .nav-admin {
+      color: #fbbf24 !important;
+      font-weight: bold;
+    }
+
+    main {
+      max-width: 1000px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: #888;
+      font-size: 0.85rem;
+      border-top: 1px solid #ddd;
+      margin-top: 40px;
+    }
+
+    a { color: #0066cc; }
+    a:hover { text-decoration: underline; }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <nav>
+    <a href="/" class="nav-brand">CodeCrunch</a>
+    <div class="nav-links">
+      <a href="/">Problems</a>
+      <a href="/leaderboard">Leaderboard</a>
+      <span class="nav-divider">|</span>
+      {% if session.user_id %}
+        {% if session.is_admin %}
+          <a href="/admin" class="nav-admin">Admin</a>
+        {% endif %}
+        <a href="/profile" class="nav-user">{{ session.username }}</a>
+        <a href="/logout">Logout</a>
+      {% else %}
+        <a href="/login">Login</a>
+        <a href="/register">Register</a>
+      {% endif %}
+    </div>
+  </nav>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>CodeCrunch &copy; 2026</footer>
+  <style>
+  @keyframes pageFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  body {
+    animation: pageFadeIn 0.35s ease both;
+  }
+</style>
+
+<script>
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest('a');
+    if (
+      !link ||
+      !link.href ||
+      link.target === '_blank' ||
+      link.href.startsWith('mailto:') ||
+      link.href.startsWith('#') ||
+      link.origin !== location.origin
+    ) return;
+
+    e.preventDefault();
+    const dest = link.href;
+
+    document.body.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+    document.body.style.opacity = '0';
+    document.body.style.transform = 'translateY(-10px)';
+
+    setTimeout(() => { window.location.href = dest; }, 250);
+  });
+
+  document.addEventListener('submit', () => {
+    document.body.style.transition = 'opacity 0.25s ease';
+    document.body.style.opacity = '0';
+  });
+</script>
+</body>
+</html>

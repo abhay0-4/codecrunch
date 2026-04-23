@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard — CodeCrunch{% endblock %}
+
+{% block extra_head %}
+<style>
+  .admin-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .admin-title { font-size: 1.3rem; font-weight: bold; }
+  .admin-subtitle { font-size: 0.85rem; color: #888; margin-top: 2px; }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 16px 20px;
+  }
+  .stat-card-num { font-size: 1.8rem; font-weight: bold; color: #111; }
+  .stat-card-label { font-size: 0.8rem; color: #888; text-transform: uppercase; margin-top: 2px; }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .section-title { font-weight: bold; font-size: 0.95rem; }
+
+  .btn {
+    display: inline-block;
+    padding: 7px 16px;
+    font-size: 0.85rem;
+    text-decoration: none;
+    border: 1px solid #ccc;
+    color: #222;
+    background: #fff;
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+  }
+  .btn-primary { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .btn-danger  { background: #fce8e8; color: #b91c1c; border-color: #f5c2c2; }
+  .btn-small   { padding: 4px 10px; font-size: 0.78rem; }
+  .btn:hover   { opacity: 0.85; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border: 1px solid #ddd;
+    margin-bottom: 28px;
+  }
+  th {
+    background: #f0f0f0;
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    color: #555;
+    border-bottom: 1px solid #ddd;
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #eee;
+    font-size: 0.9rem;
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-weight: bold;
+  }
+  .Easy        { background: #e6f4ea; color: #2d7a3a; }
+  .Medium      { background: #fff8e1; color: #a07000; }
+  .Hard        { background: #fce8e8; color: #b91c1c; }
+  .admin-badge { background: #e8eaff; color: #3730a3; }
+
+  .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  form { display: inline; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+  <div>
+    <div class="admin-title">Admin Dashboard</div>
+    <div class="admin-subtitle">Logged in as {{ session.username }}</div>
+  </div>
+  <a href="/" class="btn">← Back to Site</a>
+</div>
+
+<!-- Stats -->
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-card-num">{{ problems|length }}</div>
+    <div class="stat-card-label">Problems</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-num">{{ users|length }}</div>
+    <div class="stat-card-label">Users</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-num">{{ sub_count }}</div>
+    <div class="stat-card-label">Submissions</div>
+  </div>
+</div>
+
+<!-- Problems -->
+<div class="section-header">
+  <div class="section-title">Problems</div>
+  <a href="/admin/problem/new" class="btn btn-primary">+ Add Problem</a>
+</div>
+<table>
+  <thead>
+    <tr>
+      <th style="width:40px;">#</th>
+      <th>Title</th>
+      <th>Difficulty</th>
+      <th>Test Cases</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for prob in problems %}
+    <tr>
+      <td style="color:#888;">{{ prob.id }}</td>
+      <td>{{ prob.title }}</td>
+      <td><span class="badge {{ prob.difficulty }}">{{ prob.difficulty }}</span></td>
+      <td style="color:#888;">{{ prob.test_cases|length }}</td>
+      <td>
+        <div class="actions">
+          <a href="/admin/problem/{{ prob.id }}/edit" class="btn btn-small">Edit</a>
+          <form method="POST" action="/admin/problem/{{ prob.id }}/delete"
+                onsubmit="return confirm('Delete {{ prob.title }}?')">
+            <button type="submit" class="btn btn-small btn-danger">Delete</button>
+          </form>
+        </div>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- Users -->
+<div class="section-header">
+  <div class="section-title">Users</div>
+</div>
+<table>
+  <thead>
+    <tr>
+      <th style="width:40px;">#</th>
+      <th>Username</th>
+      <th>Email</th>
+      <th>Role</th>
+      <th>Joined</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for user in users %}
+    <tr>
+      <td style="color:#888;">{{ user.id }}</td>
+      <td>
+        {{ user.username }}
+        {% if user.id == session.user_id %}
+          <span style="font-size:0.75rem; color:#888;">(you)</span>
+        {% endif %}
+      </td>
+      <td style="color:#888;">{{ user.email }}</td>
+      <td>
+        {% if user.is_admin %}
+          <span class="badge admin-badge">Admin</span>
+        {% else %}
+          <span style="color:#888; font-size:0.85rem;">User</span>
+        {% endif %}
+      </td>
+      <td style="color:#888; font-size:0.82rem;">{{ user.created_at[:10] }}</td>
+      <td>
+        {% if user.id != session.user_id %}
+        <div class="actions">
+          <form method="POST" action="/admin/user/{{ user.id }}/toggle-admin">
+            <button type="submit" class="btn btn-small">
+              {{ "Remove Admin" if user.is_admin else "Make Admin" }}
+            </button>
+          </form>
+          <form method="POST" action="/admin/user/{{ user.id }}/delete"
+                onsubmit="return confirm('Delete user {{ user.username }}?')">
+            <button type="submit" class="btn btn-small btn-danger">Delete</button>
+          </form>
+        </div>
+        {% else %}
+          <span style="color:#ccc; font-size:0.82rem;">—</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

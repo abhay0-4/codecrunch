@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block title %}{{ problem.title }} — CodeCrunch{% endblock %}
+
+{% block extra_head %}
+<style>
+  .back { font-size: 0.85rem; margin-bottom: 18px; display: block; }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 700px) { .layout { grid-template-columns: 1fr; } }
+
+  .card {
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 20px;
+  }
+
+  .card-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #888;
+    margin-bottom: 12px;
+    font-weight: bold;
+  }
+
+  .prob-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 8px; }
+  .prob-desc  { color: #444; line-height: 1.6; margin-bottom: 18px; }
+
+  .section-label { font-size: 0.8rem; font-weight: bold; color: #555; margin-bottom: 8px; }
+
+  .sample {
+    background: #f8f8f8;
+    border: 1px solid #e0e0e0;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    font-family: monospace;
+    font-size: 0.88rem;
+  }
+  .sample-row { display: flex; gap: 30px; }
+  .sample-label { color: #888; font-size: 0.75rem; margin-bottom: 3px; }
+  .sample-val   { color: #222; }
+
+  .constraints { font-size: 0.85rem; color: #555; line-height: 1.8; list-style: none; }
+  .constraints li::before { content: "• "; color: #aaa; }
+
+  /* Language selector */
+  .lang-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .lang-row label {
+    font-size: 0.82rem;
+    font-weight: bold;
+    color: #555;
+    white-space: nowrap;
+  }
+  .lang-row select {
+    padding: 5px 8px;
+    border: 1px solid #ccc;
+    font-size: 0.88rem;
+    font-family: Arial, sans-serif;
+    outline: none;
+    cursor: pointer;
+  }
+  .lang-row select:focus { border-color: #888; }
+
+  /* Editor */
+  textarea {
+    width: 100%;
+    height: 340px;
+    font-family: monospace;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    border: 1px solid #ccc;
+    padding: 12px;
+    resize: vertical;
+    background: #fafafa;
+    color: #111;
+    outline: none;
+  }
+  textarea:focus { border-color: #888; background: #fff; }
+
+  .editor-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+  }
+  .hint-text { font-size: 0.78rem; color: #aaa; }
+
+  .btn-submit {
+    background: #1a1a1a;
+    color: #fff;
+    border: none;
+    padding: 8px 22px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+  }
+  .btn-submit:hover { background: #333; }
+
+  .error-box {
+    background: #fff0f0;
+    border: 1px solid #f5c2c2;
+    color: #b91c1c;
+    padding: 10px 14px;
+    font-size: 0.88rem;
+    margin-bottom: 10px;
+  }
+
+  .back-button {
+    display: inline-block;
+    padding: 10px 20px;
+    border: 2px solid hsl(0, 0%, 20%);
+    background-color: violet;
+    color: #333;
+    text-decoration: none;
+    border-radius: 5px;
+    font-family: sans-serif;
+    margin: 2px;
+  }
+  .back-button:hover { background-color: rgb(247, 151, 247); }
+</style>
+{% endblock %}
+
+{% block content %}
+<a class="back-button" href="/">← Back to Problems</a>
+
+<div class="layout">
+  <!-- Problem Description -->
+  <div class="card">
+    <div class="card-title">Problem Statement</div>
+    <div class="prob-title">{{ problem.title }}</div>
+    <div class="prob-desc">{{ problem.desc }}</div>
+
+    <div class="section-label">Sample Cases</div>
+    {% for case in problem.test_cases %}
+    <div class="sample">
+      <div class="sample-row">
+        <div>
+          <div class="sample-label">Input</div>
+          <div class="sample-val">{{ case.input }}</div>
+        </div>
+        <div>
+          <div class="sample-label">Output</div>
+          <div class="sample-val">{{ case.output }}</div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+
+    <div class="section-label" style="margin-top:16px;">Constraints</div>
+    <ul class="constraints">
+      <li>Time Limit: 2 seconds</li>
+      <li>Read input from stdin, print output to stdout</li>
+    </ul>
+  </div>
+
+  <!-- Code Editor -->
+  <div>
+    <div class="card">
+      <form method="POST" id="code-form">
+
+        <!-- Language Selector -->
+        <div class="lang-row">
+          <label for="language-select">Language:</label>
+          <select name="language" id="language-select">
+            {% for key, lang in languages.items() %}
+            <option value="{{ key }}" {% if key == selected_lang %}selected{% endif %}>
+              {{ lang.label }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="card-title" id="editor-label">
+          Your Solution — {{ languages[selected_lang].label }}
+        </div>
+
+        {% if error %}
+        <div class="error-box">{{ error }}</div>
+        {% endif %}
+
+        <textarea name="code" id="code" spellcheck="false">{% if request.form.get('code') %}{{ request.form.get('code') }}{% else %}{{ starters[selected_lang] }}{% endif %}</textarea>
+
+        <div class="editor-footer">
+          <span class="hint-text">Tab inserts spaces</span>
+          <button type="submit" class="btn-submit">Run & Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  const starters = {
+    {% for key, val in starters.items() %}
+    "{{ key }}": {{ val | tojson }},
+    {% endfor %}
+  };
+
+  const langLabels = {
+    {% for key, lang in languages.items() %}
+    "{{ key }}": "{{ lang.label }}",
+    {% endfor %}
+  };
+
+  const select = document.getElementById('language-select');
+  const editor = document.getElementById('code');
+  const label  = document.getElementById('editor-label');
+
+  select.addEventListener('change', function () {
+    const lang = this.value;
+    label.textContent = 'Your Solution — ' + langLabels[lang];
+
+    // Only swap code if user hasn't modified the starter
+    const currentVal = editor.value.trim();
+    const isStarter  = Object.values(starters).some(s => currentVal === s.trim());
+    if (isStarter || currentVal === '') {
+      editor.value = starters[lang];
+    }
+  });
+
+  // Tab key inserts 4 spaces
+  editor.addEventListener('keydown', function (e) {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const start = this.selectionStart;
+      const end   = this.selectionEnd;
+      this.value  = this.value.substring(0, start) + '    ' + this.value.substring(end);
+      this.selectionStart = this.selectionEnd = start + 4;
+    }
+  });
+</script>
+{% endblock %}

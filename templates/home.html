@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}CodeCrunch — Problems{% endblock %}
+
+{% block extra_head %}
+<style>
+  .page-heading { font-size: 1.3rem; font-weight: bold; margin-bottom: 20px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border: 1px solid #ddd;
+  }
+  th {
+    background: #f0f0f0;
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    color: #555;
+    border-bottom: 1px solid #ddd;
+  }
+  td {
+    padding: 11px 14px;
+    border-bottom: 1px solid #eee;
+    font-size: 0.95rem;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafafa; }
+
+  .prob-link { color: #0066cc; text-decoration: none; font-weight: 500; }
+  .prob-link:hover { text-decoration: underline; }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 3px;
+    font-size: 0.78rem;
+    font-weight: bold;
+  }
+  .Easy   { background: #e6f4ea; color: #2d7a3a; }
+  .Medium { background: #fff8e1; color: #a07000; }
+  .Hard   { background: #fce8e8; color: #b91c1c; }
+
+  .solved-check { color: #2d7a3a; font-weight: bold; }
+  .unsolved     { color: #ccc; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-heading">Practice Problems</div>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width:40px;">#</th>
+      <th>Title</th>
+      <th>Difficulty</th>
+      <th>Test Cases</th>
+      {% if session.user_id %}<th>Status</th>{% endif %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for prob in problems %}
+    <tr>
+      <td style="color:#888;">{{ prob.id }}</td>
+      <td><a class="prob-link" href="/problem/{{ prob.id }}">{{ prob.title }}</a></td>
+      <td><span class="badge {{ prob.difficulty }}">{{ prob.difficulty }}</span></td>
+      <td style="color:#888;">{{ prob.test_cases|length }}</td>
+      {% if session.user_id %}
+      <td>
+        {% if prob.id in solved %}
+          <span class="solved-check">✓ Solved</span>
+        {% else %}
+          <span class="unsolved">—</span>
+        {% endif %}
+      </td>
+      {% endif %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

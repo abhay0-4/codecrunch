@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Leaderboard — CodeCrunch{% endblock %}
+
+{% block extra_head %}
+<style>
+  .page-heading { font-size: 1.3rem; font-weight: bold; margin-bottom: 20px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border: 1px solid #ddd;
+  }
+  th {
+    background: #f0f0f0;
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    color: #555;
+    border-bottom: 1px solid #ddd;
+  }
+  td {
+    padding: 11px 14px;
+    border-bottom: 1px solid #eee;
+    font-size: 0.95rem;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafafa; }
+
+  .rank { font-weight: bold; color: #888; }
+  .rank-1 { color: #b8860b; }
+  .rank-2 { color: #777; }
+  .rank-3 { color: #a0522d; }
+
+  .you-row td { background: #f0f7ff; }
+  .you-label { font-size: 0.78rem; color: #888; }
+
+  .empty { color: #888; font-size: 0.9rem; padding: 20px 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-heading">Leaderboard</div>
+
+{% if board %}
+<table>
+  <thead>
+    <tr>
+      <th style="width:50px;">Rank</th>
+      <th>Username</th>
+      <th>Problems Solved</th>
+      <th>Total Submissions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for entry in board %}
+    <tr {% if session.username and entry.username == session.username %}class="you-row"{% endif %}>
+      <td>
+        <span class="rank
+          {% if loop.index == 1 %}rank-1
+          {% elif loop.index == 2 %}rank-2
+          {% elif loop.index == 3 %}rank-3{% endif %}">
+          {{ loop.index }}
+        </span>
+      </td>
+      <td>
+        {{ entry.username }}
+        {% if session.username and entry.username == session.username %}
+          <span class="you-label">(you)</span>
+        {% endif %}
+      </td>
+      <td><strong>{{ entry.solved }}</strong></td>
+      <td style="color:#888;">{{ entry.total }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+  <div class="empty">No submissions yet. Be the first to solve a problem!</div>
+{% endif %}
+{% endblock %}

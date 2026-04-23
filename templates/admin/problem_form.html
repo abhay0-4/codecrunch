@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}{{ action }} Problem — Admin — CodeCrunch{% endblock %}
+
+{% block extra_head %}
+<style>
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .page-title { font-size: 1.2rem; font-weight: bold; }
+
+  .card {
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 24px;
+    max-width: 700px;
+  }
+
+  .form-group { margin-bottom: 18px; }
+  label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #444;
+    margin-bottom: 6px;
+  }
+  .hint {
+    font-size: 0.78rem;
+    color: #888;
+    margin-top: 5px;
+  }
+
+  input[type="text"],
+  select,
+  textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    font-size: 0.92rem;
+    font-family: Arial, sans-serif;
+    outline: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: #888; }
+  textarea { resize: vertical; }
+
+  .tc-textarea {
+    font-family: monospace;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    height: 200px;
+  }
+
+  .example-box {
+    background: #f8f8f8;
+    border: 1px solid #e0e0e0;
+    padding: 10px 14px;
+    font-family: monospace;
+    font-size: 0.8rem;
+    line-height: 1.7;
+    margin-top: 8px;
+  }
+
+  .btn-row { display: flex; gap: 10px; margin-top: 8px; }
+  .btn {
+    padding: 8px 20px;
+    font-size: 0.9rem;
+    border: 1px solid #ccc;
+    background: #fff;
+    color: #222;
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .btn-primary { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .btn:hover { opacity: 0.85; }
+
+  .error-box {
+    background: #fff0f0;
+    border: 1px solid #f5c2c2;
+    color: #b91c1c;
+    padding: 10px 14px;
+    font-size: 0.88rem;
+    margin-bottom: 16px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-title">{{ action }} Problem</div>
+  <a href="/admin" style="font-size:0.85rem;">← Back to Dashboard</a>
+</div>
+
+<div class="card">
+  {% if error %}
+  <div class="error-box">{{ error }}</div>
+  {% endif %}
+
+  <form method="POST">
+    <div class="form-group">
+      <label for="title">Problem Title</label>
+      <input type="text" id="title" name="title"
+             value="{{ problem.title if problem else request.form.get('title', '') }}"
+             placeholder="e.g. Sum of Two Numbers">
+    </div>
+
+    <div class="form-group">
+      <label for="difficulty">Difficulty</label>
+      <select id="difficulty" name="difficulty">
+        {% for level in ['Easy', 'Medium', 'Hard'] %}
+        <option value="{{ level }}"
+          {% if (problem and problem.difficulty == level) or
+                (not problem and request.form.get('difficulty') == level) %}
+          selected
+          {% endif %}>
+          {{ level }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="desc">Description</label>
+      <textarea id="desc" name="desc" rows="4"
+                placeholder="Describe the problem. Include input/output format.">{{ problem.desc if problem else request.form.get('desc', '') }}</textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="test_cases">Test Cases</label>
+      <textarea id="test_cases" name="test_cases" class="tc-textarea"
+                placeholder="input|||output">{{ tc_text if tc_text else request.form.get('test_cases', '') }}</textarea>
+      <div class="hint">
+        One test case per line. Format: <strong>input|||output</strong><br>
+        For multi-line input, use <strong>\n</strong> between lines.
+      </div>
+      <div class="example-box">
+        Example:<br>
+        2 3|||5<br>
+        10 20|||30<br>
+        5\n1 2 3 4 5|||15
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button type="submit" class="btn btn-primary">{{ action }} Problem</button>
+      <a href="/admin" class="btn">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

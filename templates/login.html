@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Login — CodeCrunch{% endblock %}
+
+{% block extra_head %}
+<style>
+  .auth-wrap {
+    max-width: 380px;
+    margin: 40px auto;
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 28px 30px;
+  }
+  .auth-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 22px;
+  }
+  .form-group { margin-bottom: 16px; }
+  label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #444;
+    margin-bottom: 5px;
+  }
+  input[type="text"],
+  input[type="email"],
+  input[type="password"] {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    font-size: 0.95rem;
+    font-family: Arial, sans-serif;
+    outline: none;
+  }
+  input:focus { border-color: #888; }
+  .btn-submit {
+    width: 100%;
+    padding: 9px;
+    background: #1a1a1a;
+    color: #fff;
+    border: none;
+    font-size: 0.95rem;
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+    margin-top: 6px;
+  }
+  .btn-submit:hover { background: #333; }
+  .error-box {
+    background: #fff0f0;
+    border: 1px solid #f5c2c2;
+    color: #b91c1c;
+    padding: 9px 12px;
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+  }
+  .auth-footer {
+    margin-top: 16px;
+    font-size: 0.85rem;
+    color: #666;
+    text-align: center;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-title">Login</div>
+
+  {% if error %}
+  <div class="error-box">{{ error }}</div>
+  {% endif %}
+
+  <form method="POST">
+    <div class="form-group">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username"
+             value="{{ request.form.get('username', '') }}" autofocus>
+    </div>
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password">
+    </div>
+    <button type="submit" class="btn-submit">Login</button>
+  </form>
+
+  <div class="auth-footer">
+    Don't have an account? <a href="/register">Register</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% block title %}Profile — {{ user.username }} — CodeCrunch{% endblock %}
+
+{% block extra_head %}
+<style>
+  .profile-header {
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .profile-name { font-size: 1.3rem; font-weight: bold; }
+  .profile-meta { font-size: 0.85rem; color: #888; margin-top: 4px; }
+
+  .stats { display: flex; gap: 30px; }
+  .stat { text-align: center; }
+  .stat-num   { font-size: 1.5rem; font-weight: bold; color: #111; display: block; }
+  .stat-label { font-size: 0.75rem; color: #888; text-transform: uppercase; }
+
+  .section-title { font-weight: bold; margin-bottom: 12px; font-size: 0.95rem; color: #333; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border: 1px solid #ddd;
+  }
+  th {
+    background: #f0f0f0;
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    color: #555;
+    border-bottom: 1px solid #ddd;
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #eee;
+    font-size: 0.9rem;
+  }
+  tr:last-child td { border-bottom: none; }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 3px;
+    font-size: 0.78rem;
+    font-weight: bold;
+  }
+  .v-accepted { background: #e6f4ea; color: #2d7a3a; }
+  .v-wrong    { background: #fce8e8; color: #b91c1c; }
+  .v-tle      { background: #fff8e1; color: #a07000; }
+  .v-runtime  { background: #fce8e8; color: #b91c1c; }
+
+  .lang-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    background: #f0f0f0;
+    color: #444;
+    border: 1px solid #ddd;
+  }
+  .lang-python     { background: #fef9e7; color: #b45309; border-color: #fde68a; }
+  .lang-c          { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+  .lang-javascript { background: #fefce8; color: #854d0e; border-color: #fef08a; }
+
+  .no-submissions { color: #888; font-size: 0.9rem; padding: 20px 0; }
+
+  .code-toggle {
+    background: none;
+    border: none;
+    color: #0066cc;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-family: Arial, sans-serif;
+    padding: 0;
+  }
+  .code-toggle:hover { text-decoration: underline; }
+
+  .code-block {
+    display: none;
+    background: #f8f8f8;
+    border: 1px solid #e0e0e0;
+    padding: 12px;
+    font-family: monospace;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    margin-top: 8px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-header">
+  <div>
+    <div class="profile-name">{{ user.username }}</div>
+    <div class="profile-meta">Member since {{ user.created_at[:10] }}</div>
+  </div>
+  <div class="stats">
+    <div class="stat">
+      <span class="stat-num">{{ solved }}</span>
+      <span class="stat-label">Solved</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">{{ accepted }}</span>
+      <span class="stat-label">Accepted</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">{{ total }}</span>
+      <span class="stat-label">Submissions</span>
+    </div>
+  </div>
+</div>
+
+<div class="section-title">Submission History</div>
+
+{% if submissions %}
+<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Problem</th>
+      <th>Language</th>
+      <th>Verdict</th>
+      <th>Submitted</th>
+      <th>Code</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for s in submissions %}
+    {% set prob = problems.get(s.problem_id) %}
+    {% if s.verdict == 'Accepted' %}{% set vc = 'v-accepted' %}
+    {% elif s.verdict == 'Time Limit Exceeded' %}{% set vc = 'v-tle' %}
+    {% elif s.verdict == 'Runtime Error' %}{% set vc = 'v-runtime' %}
+    {% else %}{% set vc = 'v-wrong' %}{% endif %}
+
+    {% set lang_key = s.language if s.language else 'python' %}
+    {% set lang_label = languages[lang_key].label if lang_key in languages else lang_key %}
+
+    <tr>
+      <td style="color:#888;">{{ loop.index }}</td>
+      <td>
+        {% if prob %}
+          <a href="/problem/{{ s.problem_id }}">{{ prob.title }}</a>
+        {% else %}
+          Problem #{{ s.problem_id }}
+        {% endif %}
+      </td>
+      <td>
+        <span class="lang-badge lang-{{ lang_key }}">{{ lang_label }}</span>
+      </td>
+      <td><span class="badge {{ vc }}">{{ s.verdict }}</span></td>
+      <td style="color:#888; font-size:0.82rem;">{{ s.submitted_at[:16].replace('T', ' ') }}</td>
+      <td>
+        <button class="code-toggle" onclick="toggleCode({{ s.id }})">View Code</button>
+        <pre class="code-block" id="code-{{ s.id }}">{{ s.code }}</pre>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+  <div class="no-submissions">No submissions yet. <a href="/">Start solving problems →</a></div>
+{% endif %}
+
+<script>
+  function toggleCode(id) {
+    const el = document.getElementById('code-' + id);
+    el.style.display = el.style.display === 'block' ? 'none' : 'block';
+  }
+</script>
+{% endblock %}
