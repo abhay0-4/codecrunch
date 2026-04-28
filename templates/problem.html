@@ -72,21 +72,15 @@
   }
   .lang-row select:focus { border-color: #888; }
 
-  /* Editor */
-  textarea {
+  /* Monaco container */
+  #monaco-container {
     width: 100%;
-    height: 340px;
-    font-family: monospace;
-    font-size: 0.88rem;
-    line-height: 1.6;
+    height: 360px;
     border: 1px solid #ccc;
-    padding: 12px;
-    resize: vertical;
-    background: #fafafa;
-    color: #111;
-    outline: none;
   }
-  textarea:focus { border-color: #888; background: #fff; }
+
+  /* Hidden textarea that actually submits */
+  #code { display: none; }
 
   .editor-footer {
     display: flex;
@@ -126,6 +120,7 @@
     border-radius: 5px;
     font-family: sans-serif;
     margin: 2px;
+    margin-bottom: 16px;
   }
   .back-button:hover { background-color: rgb(247, 151, 247); }
 </style>
@@ -189,55 +184,114 @@
         <div class="error-box">{{ error }}</div>
         {% endif %}
 
+        <!-- Monaco Editor -->
+        <div id="monaco-container"></div>
+
+        <!-- Hidden textarea — holds code for form submission -->
         <textarea name="code" id="code" spellcheck="false">{% if request.form.get('code') %}{{ request.form.get('code') }}{% else %}{{ starters[selected_lang] }}{% endif %}</textarea>
 
         <div class="editor-footer">
-          <span class="hint-text">Tab inserts spaces</span>
-          <button type="submit" class="btn-submit">Run & Submit</button>
+          <span class="hint-text">Ctrl+Enter to submit</span>
+          <button type="submit" class="btn-submit" id="submit-btn">Run & Submit</button>
         </div>
       </form>
     </div>
   </div>
 </div>
 
+<!-- Monaco CDN loader -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+
 <script>
+  // Starter code per language
   const starters = {
     {% for key, val in starters.items() %}
     "{{ key }}": {{ val | tojson }},
     {% endfor %}
   };
 
+  // Language labels
   const langLabels = {
     {% for key, lang in languages.items() %}
     "{{ key }}": "{{ lang.label }}",
     {% endfor %}
   };
 
-  const select = document.getElementById('language-select');
-  const editor = document.getElementById('code');
-  const label  = document.getElementById('editor-label');
+  // Map our language keys to Monaco language IDs
+  const monacoLangMap = {
+    "python":     "python",
+    "c":          "c",
+    "javascript": "javascript",
+  };
 
-  select.addEventListener('change', function () {
-    const lang = this.value;
-    label.textContent = 'Your Solution — ' + langLabels[lang];
+  const hiddenTextarea = document.getElementById('code');
+  const langSelect     = document.getElementById('language-select');
+  const editorLabel    = document.getElementById('editor-label');
+  const form           = document.getElementById('code-form');
 
-    // Only swap code if user hasn't modified the starter
-    const currentVal = editor.value.trim();
-    const isStarter  = Object.values(starters).some(s => currentVal === s.trim());
-    if (isStarter || currentVal === '') {
-      editor.value = starters[lang];
-    }
+  let editor = null;
+  let currentLang = "{{ selected_lang }}";
+
+  // Load Monaco
+  require.config({
+    paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }
   });
 
-  // Tab key inserts 4 spaces
-  editor.addEventListener('keydown', function (e) {
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      const start = this.selectionStart;
-      const end   = this.selectionEnd;
-      this.value  = this.value.substring(0, start) + '    ' + this.value.substring(end);
-      this.selectionStart = this.selectionEnd = start + 4;
+  require(['vs/editor/editor.main'], function () {
+    editor = monaco.editor.create(document.getElementById('monaco-container'), {
+      value:             hiddenTextarea.value,
+      language:          monacoLangMap[currentLang],
+      theme:             'vs-dark',
+      fontSize:          14,
+      fontFamily:        "'Consolas', 'Courier New', monospace",
+      minimap:           { enabled: false },
+      scrollBeyondLastLine: false,
+      automaticLayout:   true,
+      tabSize:           4,
+      insertSpaces:      true,
+      lineNumbers:       'on',
+      renderLineHighlight: 'all',
+      wordWrap:          'off',
+    });
+
+    // Ctrl+Enter submits the form
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, function () {
+      submitForm();
+    });
+  });
+
+  // When language dropdown changes
+  langSelect.addEventListener('change', function () {
+    const newLang = this.value;
+    editorLabel.textContent = 'Your Solution — ' + langLabels[newLang];
+
+    if (editor) {
+      // Only swap code if editor still has a starter
+      const currentCode = editor.getValue().trim();
+      const isStarter   = Object.values(starters).some(s => currentCode === s.trim());
+
+      if (isStarter || currentCode === '') {
+        editor.setValue(starters[newLang]);
+      }
+
+      // Switch Monaco language mode
+      monaco.editor.setModelLanguage(editor.getModel(), monacoLangMap[newLang]);
     }
+
+    currentLang = newLang;
+  });
+
+  // On form submit, copy Monaco content into hidden textarea
+  function submitForm() {
+    if (editor) {
+      hiddenTextarea.value = editor.getValue();
+    }
+    form.submit();
+  }
+
+  document.getElementById('submit-btn').addEventListener('click', function (e) {
+    e.preventDefault();
+    submitForm();
   });
 </script>
 {% endblock %}
