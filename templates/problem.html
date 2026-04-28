@@ -44,7 +44,7 @@
   }
   .sample-row { display: flex; gap: 30px; }
   .sample-label { color: #888; font-size: 0.75rem; margin-bottom: 3px; }
-  .sample-val   { color: #222; }
+  .sample-val   { color: #5e5c5c; }
 
   .constraints { font-size: 0.85rem; color: #555; line-height: 1.8; list-style: none; }
   .constraints li::before { content: "• "; color: #aaa; }
@@ -241,7 +241,7 @@
     editor = monaco.editor.create(document.getElementById('monaco-container'), {
       value:             hiddenTextarea.value,
       language:          monacoLangMap[currentLang],
-      theme:             'vs-dark',
+      theme:             'vs',
       fontSize:          14,
       fontFamily:        "'Consolas', 'Courier New', monospace",
       minimap:           { enabled: false },
